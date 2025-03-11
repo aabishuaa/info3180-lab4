@@ -8,6 +8,7 @@ from app.forms import LoginForm
 from werkzeug.security import check_password_hash
 from app.forms import UploadForm
 from .file_utils import get_uploaded_images
+from flask_login import logout_user
 
 ###
 # Routing for your application.
@@ -112,11 +113,11 @@ def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
 
-
 @app.route('/uploads/<filename>')
-@login_required
+@login_required  
 def get_image(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    upload_folder = os.path.join(os.getcwd(), 'uploads')
+    return send_from_directory(upload_folder, filename)
 
 
 
@@ -125,3 +126,12 @@ def get_image(filename):
 def files():
     image_files = get_uploaded_images()  
     return render_template('files.html', image_files=image_files)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Logout the current user."""
+    logout_user()  
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('home'))  
