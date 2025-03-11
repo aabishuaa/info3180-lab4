@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block main %}
+    <h1 class="page-header">Uploaded Files</h1>
+    {% include 'flash_messages.html' %}
+
+    <div class="image-grid">
+        {% for image in image_files %}
+            <div class="image-item">
+                <img src="{{ url_for('get_image', filename=image) }}" alt="{{ image }}">
+                <link rel="stylesheet" href="{{ url_for('static', filename="css/files.css") }}">
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
