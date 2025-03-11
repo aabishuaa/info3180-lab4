@@ -6,6 +6,8 @@ from werkzeug.utils import secure_filename
 from app.models import UserProfile
 from app.forms import LoginForm
 from werkzeug.security import check_password_hash
+from app.forms import UploadForm
+
 
 ###
 # Routing for your application.
@@ -24,17 +26,21 @@ def about():
 
 
 @app.route('/upload', methods=['POST', 'GET'])
+@login_required  # Restricts access to logged-in users
 def upload():
-    # Instantiate your form class
+    form = UploadForm()
 
-    # Validate file upload on submit
-    if form.validate_on_submit():
-        # Get file data and save to your uploads folder
+    if form.validate_on_submit():  
+        file = form.file.data
+        filename = secure_filename(file.filename)  
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)  
+        file.save(upload_path)  
 
-        flash('File Saved', 'success')
-        return redirect(url_for('home')) # Update this to redirect the user to a route that displays all uploaded image files
+        flash('File successfully uploaded!', 'success')
+        return redirect(url_for('home'))  
 
-    return render_template('upload.html')
+    return render_template('upload.html', form=form)  
+
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -44,14 +50,21 @@ def login():
         username = form.username.data
         password = form.password.data
 
-        
+        # Query user by username
         user = UserProfile.query.filter_by(username=username).first()
 
-        if user and check_password_hash(user.password, password):  
-            login_user(user)
-            flash("Login successful!", "success")
-            return redirect(url_for("upload"))  # Redirect to upload page
+        if user:
+            # Debugging: Print the stored hashed password and the entered password
+            print("Stored hashed password:", user.password)
+            print("Entered password:", password)
 
+            # Check if the entered password matches the stored hash
+            if check_password_hash(user.password, password):  
+                login_user(user)
+                flash("Login successful!", "success")
+                return redirect(url_for("upload"))  # Redirect to upload page
+            else:
+                flash("Invalid username or password. Please try again.", "danger")
         else:
             flash("Invalid username or password. Please try again.", "danger")
 
